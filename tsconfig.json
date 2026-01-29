@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "./src",
+    "paths": {
+      "~elements/*": ["components/elements/*"],
+      "~fieldset/fields": ["components/elements/Fieldset/fields"],
+      "~api": ["api"],
+      "~pages/*": ["pages/*"],
+      "~pages/schema*": ["pages/schema*"],
+      "~pages/content*": ["pages/content*"],
+      "~utils": ["utils"],
+      "~helpers": ["helpers"],
+      "~hooks/*": ["hooks/*"],
+      "~hooks/schema*": ["hooks/schema*"],
+      "~hooks/content*": ["hooks/content*"],
+      "~hooks/shared*": ["hooks/shared*"],
+      "~modules/schema/*": ["components/modules/schema*"],
+      "~modules/content/*": ["components/modules/content*"],
+      "~modules/layout/*": ["components/modules/layout*"],
+      "~services/*": ["services/*"],
+    }
+  }
+}

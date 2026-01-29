@@ -1,0 +1,1 @@
+export { useComponentContentForm } from './useComponentContentForm'
