@@ -17,7 +17,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prepare": "husky"
+    "prepare": "husky",
+    "precommit": "tsc --noEmit && eslint 'src/**/*.{ts,tsx}' && prettier --check 'src/**/*.{ts,tsx,js,jsx,json,css,scss,md}'"
   },
   "eslintConfig": {
     "extends": [
