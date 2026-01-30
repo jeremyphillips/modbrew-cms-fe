@@ -15,11 +15,7 @@ const Repeater = ({
 }: RepeaterProps) => {
   return (
     <>
-      <input
-        type="text" 
-        id={id} 
-        name={id}
-      />
+      <input type="text" id={id} name={id} />
     </>
   )
 }

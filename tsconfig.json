@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "allowJs": true,
+    "target": "ES2020",
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "strict": true,
@@ -10,22 +12,43 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": "./src",
     "paths": {
+      // src/api
+      "~api/*": ["api/*"],
+      "~api/base": ["api/base/index.ts"],
+      "~api/componentSchema": ["api/componentSchema/index.ts"],
+      "~api/componentContent": ["api/componentContent/index.ts"],
+
+      "~elements": ["components/elements/index.ts"],
       "~elements/*": ["components/elements/*"],
-      "~fieldset/fields": ["components/elements/Fieldset/fields"],
-      "~api": ["api"],
+      "~fieldset/fields/*": ["components/elements/Fieldset/fields/*"],
       "~pages/*": ["pages/*"],
-      "~pages/schema*": ["pages/schema*"],
-      "~pages/content*": ["pages/content*"],
-      "~utils": ["utils"],
-      "~helpers": ["helpers"],
-      "~hooks/*": ["hooks/*"],
-      "~hooks/schema*": ["hooks/schema*"],
-      "~hooks/content*": ["hooks/content*"],
-      "~hooks/shared*": ["hooks/shared*"],
-      "~modules/schema/*": ["components/modules/schema*"],
-      "~modules/content/*": ["components/modules/content*"],
-      "~modules/layout/*": ["components/modules/layout*"],
-      "~services/*": ["services/*"],
+      "~pages/content/*": ["pages/content/*"],
+      "~pages/schema/*": ["pages/schema/*"],
+      
+      "~utils": ["utils/index.ts"],
+      "~utils/*": ["utils/*"],
+
+      "~helpers": ["helpers/index.ts"],
+      
+      "~hooks": ["hooks/index.ts"],
+
+      "~hooks/content": ["hooks/content/index.ts"],
+      "~hooks/content/*": ["hooks/content/*"],
+      "~hooks/schema": ["hooks/schema/index.ts"],
+      "~hooks/schema/*": ["hooks/schema/*"],
+      "~hooks/shared": ["hooks/shared/index.ts"],
+      "~hooks/shared/*": ["hooks/shared/*"],
+
+      "~modules/schema": ["components/modules/schema/index.ts"],
+      "~modules/schema/*": ["components/modules/schema/*"],
+
+      "~modules/content": ["components/modules/content/index.ts"],
+      "~modules/content/*": ["components/modules/content/*"],
+
+      "~modules/layout": ["components/modules/layout/index.ts"],
+      "~modules/layout/*": ["components/modules/layout/*"],
+      
+      "~services/*": ["services/*"]
     }
   }
 }

@@ -1,7 +1,9 @@
 import { apiFetch } from '~api/base'
-import { ComponentContentApiPayloadItem } from '~api/componentContent'
+import type { ComponentContentApiPayload, ComponentContentApiPayloadItem } from '~api/componentContent'
 
-export const fetchAllComponentContent = async (filters?: { schemaId?: string }) => {
+export const fetchAllComponentContent = async (filters?: {
+  schemaId?: string
+}): Promise<ComponentContentApiPayload> => {
   let url = '/component-content'
   if (filters?.schemaId) url += `?schemaId=${filters.schemaId}`
   return apiFetch(url)
@@ -10,10 +12,15 @@ export const fetchAllComponentContent = async (filters?: { schemaId?: string }) 
 export const fetchComponentContentById = async (id: string): Promise<ComponentContentApiPayloadItem> =>
   apiFetch(`/component-content/${id}`)
 
-export const createComponentContent = async (data: Partial<ComponentContentApiPayloadItem>): Promise<ComponentContentApiPayloadItem> =>
+export const createComponentContent = async (
+  data: Partial<ComponentContentApiPayloadItem>
+): Promise<ComponentContentApiPayloadItem> =>
   apiFetch('/component-content', { method: 'POST', body: JSON.stringify(data) })
 
-export const updateComponentContent = async (id: string, data: Partial<ComponentContentApiPayloadItem>): Promise<ComponentContentApiPayloadItem> =>
+export const updateComponentContent = async (
+  id: string,
+  data: Partial<ComponentContentApiPayloadItem>
+): Promise<ComponentContentApiPayloadItem> =>
   apiFetch(`/component-content/${id}`, { method: 'PUT', body: JSON.stringify(data) })
 
 export const deleteComponentContent = async (id: string): Promise<void> =>

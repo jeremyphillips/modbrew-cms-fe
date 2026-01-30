@@ -1,10 +1,11 @@
+import type { ChangeEvent } from 'react'
 import { useDirtySnapshot, useNormalizedSubmit, useResourceActions } from '~hooks/shared'
 import { useComponentContentForm } from '~hooks/content'
 import { Button, Fieldset, ResourceAlert } from '~elements'
-import * as Fields from '~fieldset/fields'
+import * as Fields from '~elements/Fieldset/fields'
 import type { FormActionType } from '~api/base'
 import type { NormalizedComponentContent, ComponentContentProps, ComponentContentValue } from '~api/componentContent'
-import type { ComponentSchemaField, FieldType } from '~api/componentSchema'
+import type { FieldType } from '~api/componentSchema'
 
 interface ComponentContentFormProps {
   initialValues?: NormalizedComponentContent
@@ -12,102 +13,99 @@ interface ComponentContentFormProps {
   resourceId: string | null
 }
 
-const FieldsMap: Record<FieldType, React.ComponentType<any>> = {
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+const FieldsMap: Partial<Record<FieldType, React.ComponentType<any>>> = {
   Text: Fields.Text,
   Textarea: Fields.Textarea,
   Select: Fields.Select,
   CheckBox: Fields.CheckBox,
   File: Fields.File,
-  Repeater: Fields.Text, // or placeholder
+  Repeater: Fields.Repeater,
+  Number: Fields.NumberInput, // optional
+  TextNameIdPair: Fields.TextNameIdPair, // optional
 }
 
-const ComponentContentForm = ({
-  action,
-  initialValues = {},
-  resourceId = null
-}: ComponentContentFormProps) => {
+const ComponentContentForm = ({ action, initialValues, resourceId = null }: ComponentContentFormProps) => {
   const { handleAction, alert } = useResourceActions()
 
-  const {
-    componentSchemas,
-    title, 
-    // setTitle,
-    props, setProps
-  } = useComponentContentForm(initialValues, resourceId)
-
-  const buildContentPayload = () => ({
-    componentName: componentSchemas.id || componentSchemas._id,
-    title,
-    props,
-    schemaId: componentSchemas._id
+  const { schema, title, props, setProps } = useComponentContentForm({
+    initialValues,
+    defaultSchemaId: resourceId,
   })
 
-  const normalizeContentPayload = (
-    payload: { props: ComponentContentProps } & Record<string, unknown>
-  ) => ({
+  const buildContentPayload = () => ({
+    componentName: schema?.id ?? '',
+    title,
+    props,
+    schemaId: schema?._id ?? '',
+  })
+
+  const normalizeContentPayload = (payload: { props: ComponentContentProps } & Record<string, unknown>) => ({
     ...payload,
     props: Object.keys(payload.props)
       .sort()
       .reduce<Record<string, ComponentContentValue>>((acc, key) => {
         acc[key] = payload.props[key]
         return acc
-      }, {})
+      }, {}),
   })
 
   const { isDirty, resetDirty } = useDirtySnapshot({
     buildPayload: buildContentPayload,
     normalize: normalizeContentPayload,
-    deps: [title, props, componentSchemas]
+    deps: [title, props, schema],
   })
-
-  const submitBtnText = 
-    action === 'CREATE' ? 'Create new component' :
-    action === 'PUT' ? 'Save component' : ''
-
-  const handlePropsChange = (fieldId: string, value: ComponentContentValue) => {
-    setProps((prev: ComponentContentProps) => ({ ...prev, [fieldId]: value }))
-  }
 
   const { submit } = useNormalizedSubmit({
     resource: 'component-content',
     action,
-    resourceId: action === 'PUT' ? resourceId : null,
+    resourceId: action === 'PUT' && resourceId ? resourceId : undefined,
     buildPayload: buildContentPayload,
     normalize: normalizeContentPayload,
     onAfterSubmit: resetDirty,
-    handleAction 
+    handleAction,
   })
+
+  const handlePropsChange = (id: string, value: ComponentContentValue) => {
+    setProps(prev => ({ ...prev, [id]: value }))
+  }
 
   return (
     <form onSubmit={submit}>
       <ResourceAlert alert={alert} />
 
-      {componentSchemas?.schema?.length ? (
+      {schema?.schema?.length ? (
         <Fieldset>
-          {componentSchemas.schema.map((field: ComponentSchemaField) => {
+          {schema.schema.map(field => {
             const FieldComponent = FieldsMap[field.fieldType]
+            if (!FieldComponent) return null
+
+            // Determine the correct type for the onChange event/value
+            const handleChange = (
+              e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | string | number | boolean
+            ) => {
+              // Extract value from DOM event
+              const value = typeof e === 'object' && 'target' in e && e.target ? e.target.value : e // already a value for custom components
+              handlePropsChange(field.id, value as ComponentContentValue)
+            }
 
             return (
               <fieldset key={field._id || field.id}>
-                <label htmlFor={field.name}>{field.name || field.id}</label>
-                <FieldComponent
-                  value={props[field.id] ?? ''}
-                  onChange={(e) => handlePropsChange(field.id, e.target.value)}
-                  {...field.validation}
-                />
+                <label>{field.name || field.id}</label>
+                <FieldComponent value={props[field.id] ?? ''} onChange={handleChange} {...field.validation} />
               </fieldset>
             )
           })}
         </Fieldset>
       ) : (
-        <p>Loading schema fields...</p>
+        <p>Loading schema…</p>
       )}
 
       <Button
-        type='submit'
-        text={submitBtnText}
-        theme='primary'
-        disabled={!isDirty || !componentSchemas}
+        type="submit"
+        text={action === 'CREATE' ? 'Create component' : 'Save component'}
+        theme="primary"
+        disabled={!isDirty || !schema}
       />
     </form>
   )

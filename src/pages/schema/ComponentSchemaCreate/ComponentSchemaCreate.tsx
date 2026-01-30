@@ -1,12 +1,21 @@
 import { ComponentSchemaForm } from '~modules/schema'
+import type { ComponentSchemaFormPayload } from '~api/componentSchema'
 
 const ComponentSchemaCreate = () => {
-  // const fieldTypes = ['CheckBox', 'File', 'Repeater', 'Select', 'Text', 'Textarea']
+  const emptyInitialValues: ComponentSchemaFormPayload = {
+    id: '',
+    name: '',
+    description: '',
+    category: '',
+    allowedChildren: [],
+    maxInstances: null,
+    schema: [],
+  }
 
   return (
     <>
       <h1>Create New Component Schema</h1>
-      <ComponentSchemaForm action="CREATE" />
+      <ComponentSchemaForm initialValues={emptyInitialValues} resourceId={null} action="CREATE" />
     </>
   )
 }

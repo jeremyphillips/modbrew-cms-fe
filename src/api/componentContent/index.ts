@@ -1,2 +1,2 @@
 export * from './componentContent.api'
-export * from './componentContent.types'
+export type * from './componentContent.types'

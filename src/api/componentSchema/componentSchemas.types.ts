@@ -1,15 +1,7 @@
 import type { SortByType, SortOrderType } from '~api/base'
-import type { ComponentContentApiPayloadItem } from '../componentSchema/componentSchema.types'
+import type { ComponentContentApiPayloadItem } from '../componentContent/componentContent.types'
 
-export type FieldType =
-  | 'CheckBox'
-  | 'File'
-  | 'Number'
-  | 'Repeater'
-  | 'Select'
-  | 'Text'
-  | 'Textarea'
-  | 'TextNameIdPair'
+export type FieldType = 'CheckBox' | 'File' | 'Number' | 'Repeater' | 'Select' | 'Text' | 'Textarea' | 'TextNameIdPair'
 
 export interface ComponentSchemaFieldOption {
   label: string
@@ -23,6 +15,7 @@ export interface ComponentSchemaFieldValidation {
 
 export interface ComponentSchemaField {
   name: string // display name
+  _id: string
   id: string // stable ID used in props
   description?: string
   fieldType: FieldType
@@ -72,7 +65,6 @@ export interface SchemaWithContent {
   entries: ComponentContentApiPayloadItem[]
 }
 
-export interface ComponentSchemaFieldForm
-  extends ComponentSchemaField {
+export interface ComponentSchemaFieldForm extends ComponentSchemaField {
   idModified: boolean
 }

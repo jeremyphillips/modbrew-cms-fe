@@ -1,22 +1,21 @@
 import { useState } from 'react'
 import { Button, Fieldset, Modal } from '~elements'
-import { CheckBox, Number, Text, Textarea, TextNameIdPair } from '~fieldset/fields'
+import { CheckBox, NumberInput, Text, Textarea, TextNameIdPair } from '~elements/Fieldset/fields'
 import { useModal } from '~hooks/shared'
 import { fetchAllComponentContent, bulkUpdateComponentContent } from '~api/componentContent'
 import { TrashIcon } from '@heroicons/react/24/solid'
-import type { ComponentContentApiPayloadItem } from '~api/componentContent'
+import type { ComponentContentValue } from '~api/componentContent'
 import type { ComponentSchemaFieldForm, ComponentSchemaFieldOption } from '~api/componentSchema'
-
-type ComponentSchemaFieldFormKey = keyof ComponentSchemaFieldForm
 
 type FieldManagerProps = {
   componentSchemaId: string
   fields: ComponentSchemaFieldForm[]
-  onUpdateField: <K extends ComponentSchemaFieldFormKey>(
+  onUpdateField: <K extends keyof ComponentSchemaFieldForm>(
     index: number,
     key: K,
     value: ComponentSchemaFieldForm[K]
   ) => void
+  onRemoveField: (index: number) => void
   onAddOption: (index: number) => void
   onRemoveOption: (fieldIndex: number, optionIndex: number) => void
 }
@@ -25,36 +24,34 @@ const ComponentSchemaPropsRepeater = ({
   componentSchemaId,
   fields,
   onUpdateField,
+  onRemoveField,
   onAddOption,
-  onRemoveOption
+  onRemoveOption,
 }: FieldManagerProps) => {
   const { isModalOpen, openModal, closeModal } = useModal()
   const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null)
 
-  // Removes property from all component content instances
-  const removePropFromAllInstances = async (fieldId: string) => {
+  /** Remove field from all component content, then trigger onRemoveField */
+  const removePropFromAllInstances = async (fieldId: string, index: number) => {
     try {
       const instances = await fetchAllComponentContent({ schemaId: componentSchemaId })
 
-      if (instances.length) {
-        const updates = instances
-          .filter((instance: ComponentContentApiPayloadItem) => instance.props?.[fieldId] !== undefined)
-          .map((instance: ComponentContentApiPayloadItem) => ({
-            id: instance._id,
-            props: Object.fromEntries(
-              Object.entries(instance.props).filter(([key]) => key !== fieldId)
-            )
-          }))
+      const updates = instances
+        .filter(instance => instance.props?.[fieldId] !== undefined)
+        .map(instance => ({
+          id: instance._id,
+          props: Object.fromEntries(
+            Object.entries(instance.props)
+              .filter(([key]) => key !== fieldId)
+              .map(([key, val]) => [key, val as ComponentContentValue])
+          ),
+        }))
 
-        if (updates.length) {
-          await bulkUpdateComponentContent(updates)
-        }
+      if (updates.length) {
+        await bulkUpdateComponentContent(updates)
       }
 
-      // Remove field locally
-      if (pendingDeleteIndex !== null) {
-        onUpdateField(pendingDeleteIndex, '__REMOVE__', null)
-      }
+      onRemoveField(index)
     } catch (err) {
       console.error('Failed to delete schema prop:', err)
     } finally {
@@ -62,116 +59,125 @@ const ComponentSchemaPropsRepeater = ({
     }
   }
 
+  /** Update normal field values (not validation) */
+  const updateFieldValue = <K extends Exclude<keyof ComponentSchemaFieldForm, 'validation'>>(
+    index: number,
+    key: K,
+    value: ComponentSchemaFieldForm[K]
+  ) => {
+    onUpdateField(index, key, value)
+  }
+
+  /** Dedicated updater for validation object */
+  const updateValidation = (index: number, value: Partial<ComponentSchemaFieldForm['validation']>) => {
+    const merged = {
+      minLength: fields[index].validation?.minLength ?? null,
+      maxLength: fields[index].validation?.maxLength ?? null,
+      ...value,
+    }
+    onUpdateField(index, 'validation', merged)
+  }
+
+  /** Update a select/check option */
+  const updateOption = (fieldIndex: number, optIndex: number, key: keyof ComponentSchemaFieldOption, value: string) => {
+    const field = fields[fieldIndex]
+    if (!field.options) return
+
+    const updatedOptions = field.options.map((o, i) => (i === optIndex ? { ...o, [key]: value } : o))
+
+    onUpdateField(fieldIndex, 'options', updatedOptions)
+  }
+
   return (
     <>
-      {fields.map((field, index) => {
-        const handleChange =
-          <K extends keyof ComponentSchemaFieldForm>(key: K) =>
-          (value: ComponentSchemaFieldForm[K]) => {
-            if (key === 'validation') {
-              onUpdateField(index, key, {
-                ...field.validation,
-                ...(value as ComponentSchemaFieldForm['validation'])
-              })
-            } else {
-              onUpdateField(index, key, value)
-            }
-          }
+      {fields.map((field, index) => (
+        <Fieldset className="schema" key={field.id || index}>
+          <Button
+            className="absolute right-4 top-3"
+            hideTitle
+            icon={<TrashIcon className="size-5" />}
+            text="Remove schema prop"
+            size="sm"
+            theme="secondary"
+            onClick={() => {
+              setPendingDeleteIndex(index)
+              openModal()
+            }}
+          />
 
-        return (
-          <Fieldset className="schema" key={field.id || index}>
-            <Button
-              className="absolute right-4 top-3"
-              hideTitle
-              icon={<TrashIcon className="size-5" />}
-              text="Remove schema prop"
-              onClick={() => {
-                setPendingDeleteIndex(index)
-                openModal()
-              }}
-              size="sm"
-              theme="secondary"
-            />
+          <Text label="Field Type" value={field.fieldType} isReadOnly />
 
-            <Text label="Field Type" value={field.fieldType} isReadOnly />
-            <TextNameIdPair
-              name={field.name}
-              id={field.id}
-              idModified={field.idModified}
-              pascalCase={false}
-              onNameChange={handleChange('name')}
-              onIdChange={handleChange('id')}
-            />
+          <TextNameIdPair
+            name={field.name}
+            id={field.id}
+            idModified={field.idModified}
+            pascalCase={false}
+            onNameChange={val => updateFieldValue(index, 'name', val)}
+            onIdChange={val => updateFieldValue(index, 'id', val)}
+          />
 
-            <CheckBox
-              id={`required-${index}`}
-              isRequired
-              label="Is Required?"
-              value={field.required ? 1 : 0}
-              onChange={(val: 0 | 1) => handleChange('required')(val === 1)}
-            />
+          <CheckBox
+            id={`required-${index}`}
+            isRequired
+            label="Is Required?"
+            value={field.required ? 1 : 0}
+            onChange={(val: 0 | 1) => updateFieldValue(index, 'required', val === 1)}
+          />
 
-            <Textarea
-              label="Description"
-              value={field.description}
-              onChange={handleChange('description')}
-            />
+          <Textarea
+            label="Description"
+            value={field.description}
+            onChange={val => updateFieldValue(index, 'description', val)}
+          />
 
-            <Text
-              label="Default Value"
-              value={field.defaultValue}
-              onChange={(e) => handleChange('defaultValue')(e.target.value)}
-            />
+          <Text
+            label="Default Value"
+            value={field.defaultValue || ''}
+            onChange={e => updateFieldValue(index, 'defaultValue', e.target.value)}
+          />
 
-            {(field.fieldType === 'Select' || field.fieldType === 'CheckBox') && field.options && (
-              <>
-                <label>Options</label>
-                {field.options.map((option: ComponentSchemaFieldOption, optIndex: number) => (
-                  <div key={optIndex} className="select-option">
-                    <Text
-                      label="Label"
-                      value={option.label}
-                      onChange={(e) =>
-                        handleChange('options')(
-                          field.options!.map((o, i) => (i === optIndex ? { ...o, label: e.target.value } : o))
-                        )
-                      }
-                    />
-                    <Text
-                      label="Value"
-                      value={option.value}
-                      onChange={(e) =>
-                        handleChange('options')(
-                          field.options!.map((o, i) => (i === optIndex ? { ...o, value: e.target.value } : o))
-                        )
-                      }
-                    />
-                    <Button type="button" text="Remove" onClick={() => onRemoveOption(index, optIndex)} />
-                  </div>
-                ))}
-                <Button type="button" text="Add Option" onClick={() => onAddOption(index)} />
-              </>
-            )}
+          {(field.fieldType === 'Select' || field.fieldType === 'CheckBox') && field.options && (
+            <>
+              <label>Options</label>
+              {field.options.map((option, optIndex) => (
+                <div key={optIndex} className="select-option">
+                  <Text
+                    label="Label"
+                    value={option.label}
+                    onChange={e => updateOption(index, optIndex, 'label', e.target.value)}
+                  />
+                  <Text
+                    label="Value"
+                    value={option.value}
+                    onChange={e => updateOption(index, optIndex, 'value', e.target.value)}
+                  />
+                  <Button type="button" text="Remove" onClick={() => onRemoveOption(index, optIndex)} />
+                </div>
+              ))}
 
-            {(field.fieldType === 'Text' || field.fieldType === 'Textarea') && (
-              <>
-                <Number
-                  label="Min Length"
-                  value={field.validation?.minLength || null}
-                  onChange={(e) => handleChange('validation')({ minLength: e.target.value })}
-                  min={1}
-                />
-                <Number
-                  label="Max Length"
-                  value={field.validation?.maxLength || null}
-                  onChange={(e) => handleChange('validation')({ maxLength: e.target.value })}
-                  min={1}
-                />
-              </>
-            )}
-          </Fieldset>
-        )
-      })}
+              <Button type="button" text="Add Option" onClick={() => onAddOption(index)} />
+            </>
+          )}
+
+          {(field.fieldType === 'Text' || field.fieldType === 'Textarea') && (
+            <>
+              <NumberInput
+                label="Min Length"
+                value={field.validation?.minLength ?? null}
+                min={1}
+                onChange={(value: number | null) => updateValidation(index, { minLength: value })}
+              />
+
+              <NumberInput
+                label="Max Length"
+                value={field.validation?.maxLength ?? null}
+                min={1}
+                onChange={(value: number | null) => updateValidation(index, { maxLength: value })}
+              />
+            </>
+          )}
+        </Fieldset>
+      ))}
 
       <Modal
         isOpen={isModalOpen}
@@ -187,11 +193,11 @@ const ComponentSchemaPropsRepeater = ({
             theme: 'danger',
             onClick: () => {
               if (pendingDeleteIndex !== null) {
-                removePropFromAllInstances(fields[pendingDeleteIndex].id)
+                removePropFromAllInstances(fields[pendingDeleteIndex].id, pendingDeleteIndex)
               }
               closeModal()
-            }
-          }
+            },
+          },
         ]}
       >
         <div className="text-sm text-gray-700">
@@ -200,9 +206,7 @@ const ComponentSchemaPropsRepeater = ({
             <li>Immediately remove this prop from all component content</li>
             <li>Mark the schema as changed</li>
           </ul>
-          <p>
-            <strong className="block mt-2">You must save the schema to persist this change.</strong>
-          </p>
+          <strong className="block mt-2">You must save the schema to persist this change.</strong>
         </div>
       </Modal>
     </>

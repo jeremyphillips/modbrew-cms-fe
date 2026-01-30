@@ -1,29 +1,29 @@
 import { sanitizeToCase } from '~utils'
 
 interface TextNameIdPairProps {
-  name: string 
-  id: string 
-  idModified?: boolean 
+  name: string
+  id: string
+  idModified?: boolean
   idLabel?: string | 'ID'
   nameLabel?: string | 'Name'
-  onNameChange: (val: string) => void 
-  onIdChange: (val: string) => void 
-  onIdFocus?: () => void 
+  onNameChange: (val: string) => void
+  onIdChange: (val: string) => void
+  onIdFocus?: () => void
   pascalCase: boolean
 }
 
-const TextNameIdPair = ({ 
-  name = '', 
-  id = '', 
-  idModified = false, 
-  idLabel = 'ID', 
-  nameLabel = 'Name', 
-  onNameChange, 
-  onIdChange, 
-  onIdFocus, 
-  pascalCase = false 
+const TextNameIdPair = ({
+  name = '',
+  id = '',
+  idModified = false,
+  idLabel = 'ID',
+  nameLabel = 'Name',
+  onNameChange,
+  onIdChange,
+  onIdFocus,
+  pascalCase = false,
 }: TextNameIdPairProps) => {
-  const handleNameChange = (e) => {
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value
     onNameChange(newName)
     if (!idModified) {
@@ -31,7 +31,7 @@ const TextNameIdPair = ({
     }
   }
 
-  const handleIdChange = (e) => {
+  const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onIdChange(e.target.value)
   }
 
@@ -59,7 +59,7 @@ const TextNameIdPair = ({
           onFocus={onIdFocus}
           required
         />
-      </label>  
+      </label>
     </>
   )
 }

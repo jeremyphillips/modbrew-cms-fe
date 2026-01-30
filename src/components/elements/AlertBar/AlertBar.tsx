@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react'
 
+export type AlertBarStatusType = 'success' | 'error'
+
 export interface AlertBarProps {
   id?: string
   message: string
-  status: 'success' | 'error'
+  status?: AlertBarStatusType
   autoDismiss?: boolean
 }
 
-const AlertBar = ({
-  message,
-  status = 'success',
-  autoDismiss = false
-}: AlertBarProps) => {
+const AlertBar = ({ message, status = 'success', autoDismiss = false }: AlertBarProps) => {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {

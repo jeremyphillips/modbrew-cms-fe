@@ -11,15 +11,15 @@
 @tailwind utilities;
 
 html {
-  height: 100%
+  height: 100%;
 }
 
 body {
-  height: 100%
+  height: 100%;
 }
 
 #root {
-  height: 100%
+  height: 100%;
 }
 
 h1 {
@@ -52,7 +52,6 @@ aside a {
 
 label {
   /* @apply text-3xl font-bold underline; */
-
 }
 
 fieldset {
@@ -61,11 +60,11 @@ fieldset {
 }
 
 .fieldset__label {
-  margin-bottom: .25rem;
+  margin-bottom: 0.25rem;
 }
 
 .fieldset__instructions {
-  margin-top: .25rem;
+  margin-top: 0.25rem;
 }
 
 .width-100 {
@@ -80,7 +79,7 @@ fieldset {
   width: 25%;
 }
 
-input:not([type="checkbox"]),
+input:not([type='checkbox']),
 textarea,
 select {
   width: 100%;

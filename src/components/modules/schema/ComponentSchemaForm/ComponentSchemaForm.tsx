@@ -1,20 +1,12 @@
 import { Button, Fieldset, Modal, ResourceAlert } from '~elements'
-import { CheckBox, Number, Select, Textarea, TextNameIdPair } from '~fieldset/fields'
+import { CheckBox, NumberInput, Select, Textarea, TextNameIdPair } from '~elements/Fieldset/fields'
 import { ComponentSchemaPropsRepeater } from '~modules/schema'
-import {
-  useComponentSchemaForm,
-  useComponentSchemaPropsRepeater,
-  useSyncComponentSchema
-} from '~hooks/schema'
+import { useComponentSchemaForm, useComponentSchemaPropsRepeater, useSyncComponentSchema } from '~hooks/schema'
 import { useDirtySnapshot, useModal, useNormalizedSubmit, useResourceActions } from '~hooks/shared'
 import { sanitizeToCase } from '~utils'
 import { PlusIcon } from '@heroicons/react/24/solid'
 import type { FormActionType } from '~api/base'
-import type {
-  ComponentSchemaFormPayload,
-  NormalizedComponentSchemaPayload,
-  ComponentSchemaFieldForm
-} from '~api/componentSchema'
+import type { FieldType, ComponentSchemaFormPayload, NormalizedComponentSchemaPayload } from '~api/componentSchema'
 
 interface ComponentSchemaFormProps {
   initialValues: ComponentSchemaFormPayload
@@ -22,46 +14,35 @@ interface ComponentSchemaFormProps {
   resourceId: string | null
 }
 
-const ComponentSchemaForm = ({ 
-  action,
-  initialValues = {},
-  resourceId = null
-}: ComponentSchemaFormProps) => {
-  // const [existingComponentSchemas, setExistingComponentSchemas] = useState<any[]>([])
-  // const [initialSnapshot, setInitialSnapshot] = useState<string | null>(null)
-
-  const fieldTypes = ['CheckBox', 'File', 'Repeater', 'Select', 'Text', 'Textarea']
+const ComponentSchemaForm = ({ action, initialValues, resourceId = null }: ComponentSchemaFormProps) => {
+  const fieldTypes: FieldType[] = ['CheckBox', 'File', 'Repeater', 'Select', 'Text', 'Textarea']
   const categoryOptions = ['Basic Elements', 'Advanced Elements', 'Layout', 'Media']
   const { handleAction, alert } = useResourceActions()
   const { isModalOpen, openModal, closeModal } = useModal()
   const { syncSchema } = useSyncComponentSchema()
 
-  // useEffect(() => {
-  //   const fetchSchemas = async () => {
-  //     const schemas = await fetchAllComponentSchemas()
-  //     setExistingComponentSchemas(schemas)
-  //   };
-
-  //   fetchSchemas()
-  // }, [])
-
   const {
-    componentName, setComponentName,
-    componentId, setComponentId,
-    componentDescription, setComponentDescription,
-    category, setCategory,
+    componentName,
+    setComponentName,
+    componentId,
+    setComponentId,
+    componentDescription,
+    setComponentDescription,
+    category,
+    setCategory,
     // schema, setSchema,
     allowedChildren,
     // setAllowedChildren,
-    maxInstances, setMaxInstances,
-    componentIdModified, setComponentIdModified,
-    allowedChildrenOptions, toggleAllowedChildren
+    maxInstances,
+    setMaxInstances,
+    componentIdModified,
+    setComponentIdModified,
+    allowedChildrenOptions,
+    toggleAllowedChildren,
   } = useComponentSchemaForm(initialValues)
 
-  const { 
-    schemaFields, addSchemaField, 
-    updateSchemaField, addSelectOption, removeSelectOption 
-  } = useComponentSchemaPropsRepeater(initialValues.schema)
+  const { schemaFields, addSchemaField, updateSchemaField, removeSchemaField, addSelectOption, removeSelectOption } =
+    useComponentSchemaPropsRepeater(initialValues.schema?.map(field => ({ ...field, idModified: false })) || [])
 
   const buildComponentPayload = () => ({
     allowedChildren: allowedChildren || [],
@@ -70,8 +51,9 @@ const ComponentSchemaForm = ({
     id: componentId,
     name: componentName,
     maxInstances,
-    schema: schemaFields.map((field: any) => ({
+    schema: schemaFields.map(field => ({
       name: field.name,
+      _id: field._id || `temp-${Math.random().toString(36).substr(2, 9)}`,
       id: field.id,
       description: field.description,
       fieldType: field.fieldType,
@@ -80,78 +62,55 @@ const ComponentSchemaForm = ({
       required: field.required,
       defaultValue: field.defaultValue,
       validation: {
-        minLength: field.minLength,
-        maxLength: field.maxLength
-      }
-    }))
+        minLength: field.validation?.minLength ?? null,
+        maxLength: field.validation?.maxLength ?? null,
+      },
+    })),
   })
 
-  const normalizePayload = (
-    payload: ComponentSchemaFormPayload
-  ): NormalizedComponentSchemaPayload => ({
+  const normalizePayload = (payload: ComponentSchemaFormPayload): NormalizedComponentSchemaPayload => ({
     ...payload,
-    maxInstances: payload.maxInstances
-      ? Number(payload.maxInstances)
-      : null,
+    maxInstances: payload.maxInstances ? Number(payload.maxInstances) : null,
     allowedChildren: [...(payload.allowedChildren || [])].sort(),
-    schema: payload.schema.map((field: ComponentSchemaFieldForm) => ({
-      name: field.name,
-      id: field.id,
-      description: field.description,
-      fieldType: field.fieldType,
-      uiType: field.uiType,
-      required: field.required,
-      defaultValue: field.defaultValue,
+    schema: payload.schema.map(field => ({
+      ...field,
+      idModified: false,
       validation: {
         minLength: field.validation?.minLength ?? null,
-        maxLength: field.validation?.maxLength ?? null
+        maxLength: field.validation?.maxLength ?? null,
       },
-      options: field.options
-        ? field.options.map((o: { label: string; value: string }) => ({
-            label: o.label,
-            value: o.value
-          }))
-        : undefined
-    }))
+      options: field.options?.map(o => ({ label: o.label, value: o.value })),
+    })),
   })
-
 
   const { isDirty, resetDirty } = useDirtySnapshot({
     buildPayload: buildComponentPayload,
     normalize: normalizePayload,
-    deps: [
-      componentName,
-      componentId,
-      componentDescription,
-      category,
-      allowedChildren,
-      maxInstances,
-      schemaFields
-    ]
+    deps: [componentName, componentId, componentDescription, category, allowedChildren, maxInstances, schemaFields],
   })
 
   const { submit } = useNormalizedSubmit({
     resource: 'component-schemas',
     action,
-    resourceId,
+    resourceId: resourceId ?? undefined,
     buildPayload: buildComponentPayload,
-    normalize: normalizePayload,
-    onBeforeSubmit: action === 'PUT'
-      ? async () => {
-          await syncSchema({
-            schemaId: resourceId,
-            prevSchema: initialValues.schema || [],
-            nextSchema: schemaFields || []
-          })
-        }
-      : undefined,
+    normalize: normalizePayload as unknown as (payload: Record<string, unknown>) => Record<string, unknown>,
+    onBeforeSubmit:
+      action === 'PUT'
+        ? async () => {
+            await syncSchema({
+              schemaId: resourceId ?? '',
+              prevSchema: initialValues.schema || [],
+              nextSchema: schemaFields || [],
+            })
+          }
+        : undefined,
     onAfterSubmit: resetDirty,
-    handleAction
+    handleAction: (endpoint, action, payload, resId) => handleAction(endpoint, action, payload, resId ?? undefined),
   })
 
-  const submitBtnText = 
-    action === 'CREATE' ? 'Create new component schema' :
-    action === 'PUT' ? 'Update component schema' : ''
+  const submitBtnText =
+    action === 'CREATE' ? 'Create new component schema' : action === 'PUT' ? 'Update component schema' : ''
 
   return (
     <form onSubmit={submit}>
@@ -187,7 +146,7 @@ const ComponentSchemaForm = ({
           label="Category"
           options={categoryOptions.map(opt => ({ label: opt, value: opt }))}
           value={category || ''}
-          onChange={(e) => setCategory(e)}
+          onChange={e => setCategory(String(e))}
           allowEmpty={true}
           emptyOptionLabel="Select Category"
         />
@@ -210,71 +169,73 @@ const ComponentSchemaForm = ({
           </div>
         </div>
 
-        <Number
+        <NumberInput
           label="Max Instances"
           value={maxInstances}
-          onChange={(e) => setMaxInstances(e.target.value)}
           min={1}
+          onChange={(value: number | null) => setMaxInstances(value)}
         />
       </Fieldset>
 
       <h3>Props</h3>
       <ComponentSchemaPropsRepeater
-        componentSchemaId={resourceId}
+        componentSchemaId={resourceId ?? ''}
         fields={schemaFields}
         onUpdateField={updateSchemaField}
+        onRemoveField={removeSchemaField}
         onAddOption={addSelectOption}
-        onRemoveOption={removeSelectOption} 
+        onRemoveOption={removeSelectOption}
       />
 
       <div className="flex justify-end gap-2">
-        <Button 
+        <Button
           type="button"
-          onClick={() => openModal()} 
+          onClick={() => openModal()}
           size="sm"
           text="Add new prop"
-          theme='primary'
+          theme="primary"
           icon={<PlusIcon className="size-5" />}
         />
-      </div>  
+      </div>
 
       <Modal
         headline="Select Field Type"
+        onClose={closeModal}
         isOpen={isModalOpen}
         buttons={[
           {
             text: 'Cancel',
             onClick: closeModal,
-            variant: 'secondary'
-          }
+            theme: 'secondary',
+          },
         ]}
       >
-        <div className='flex flex-wrap gap-2'>
-          {fieldTypes.map((type) => (
-            <Button 
-              key={type} 
+        <div className="flex flex-wrap gap-2">
+          {fieldTypes.map(type => (
+            <Button
+              key={type}
               onClick={() => {
                 addSchemaField(type)
                 closeModal()
-              }} 
+              }}
               text={type}
-              theme='primary'
+              theme="primary"
             />
           ))}
-        </div>  
+        </div>
       </Modal>
 
-      <hr className='mt-4 mb-4' />
+      <hr className="mt-4 mb-4" />
 
-      <Button 
-        type="submit" 
+      <Button
+        type="submit"
         // onClick={handleOnSubmit}
         text={submitBtnText}
-        theme='primary'
+        theme="primary"
         disabled={!isDirty}
       />
     </form>
-  )  
+  )
 }
 
 export default ComponentSchemaForm

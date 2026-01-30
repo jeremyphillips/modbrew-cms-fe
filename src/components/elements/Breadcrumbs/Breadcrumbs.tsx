@@ -1,8 +1,5 @@
-
 const Breadcrumbs = () => {
-  return (
-    <></>      
-  )
+  return <></>
 }
 
 export default Breadcrumbs

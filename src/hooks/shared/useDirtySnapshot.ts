@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 
-export const useDirtySnapshot = <T, D extends unknown[]>({
+const useDirtySnapshot = <T, D extends unknown[]>({
   buildPayload,
   normalize,
-  deps
+  deps,
 }: {
   buildPayload: () => T
   normalize: (payload: T) => T
@@ -11,24 +11,30 @@ export const useDirtySnapshot = <T, D extends unknown[]>({
 }) => {
   const [initialSnapshot, setInitialSnapshot] = useState<string | null>(null)
 
+  // Wrap buildPayload and normalize in useCallback to stabilize references
+  const memoizedBuild = useCallback(buildPayload, deps)
+  const memoizedNormalize = useCallback(normalize, deps)
+
   // Capture initial snapshot AFTER data hydrates
   useEffect(() => {
     if (!initialSnapshot) {
-      const payload = normalize(buildPayload())
+      const payload = memoizedNormalize(memoizedBuild())
       setInitialSnapshot(JSON.stringify(payload))
     }
-  }, deps)
+  }, [initialSnapshot, memoizedBuild, memoizedNormalize])
 
   const isDirty = useMemo(() => {
     if (!initialSnapshot) return false
-    const current = normalize(buildPayload())
+    const current = memoizedNormalize(memoizedBuild())
     return JSON.stringify(current) !== initialSnapshot
-  }, [...deps, initialSnapshot])
+  }, [initialSnapshot, memoizedBuild, memoizedNormalize])
 
-  const resetDirty = () => {
-    const payload = normalize(buildPayload())
+  const resetDirty = useCallback(() => {
+    const payload = memoizedNormalize(memoizedBuild())
     setInitialSnapshot(JSON.stringify(payload))
-  }
+  }, [memoizedBuild, memoizedNormalize])
 
   return { isDirty, resetDirty }
 }
+
+export default useDirtySnapshot

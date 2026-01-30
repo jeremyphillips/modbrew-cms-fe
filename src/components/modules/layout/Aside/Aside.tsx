@@ -33,8 +33,8 @@ const Aside = () => {
             <Link to="/component-schemas/create">Create Component Schema</Link>
           </li>
         </ul>
-      </nav>  
-      
+      </nav>
+
       {/* Content Section */}
       <h3 className="font-bold text-1xl mt-3 mb-1">Content</h3>
       <nav>

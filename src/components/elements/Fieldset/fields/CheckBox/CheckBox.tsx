@@ -11,7 +11,7 @@ const CheckBox = ({
   // isRequired = false,
   label,
   value = 0,
-  onChange
+  onChange,
 }: CheckBoxProps) => {
   const handleChange = () => {
     onChange(value === 1 ? 0 : 1)

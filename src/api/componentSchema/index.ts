@@ -1,2 +1,2 @@
 export * from './componentSchemas.api'
-export * from './componentSchemas.types'
+export type * from './componentSchemas.types'

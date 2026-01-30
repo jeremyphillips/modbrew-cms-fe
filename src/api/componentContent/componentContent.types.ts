@@ -1,17 +1,10 @@
-import { ComponentSchemaField } from '~api/componentSchema'
+import type { ComponentSchemaField } from '~api/componentSchema'
 
-export type ComponentContentPrimitive =
-  | string
-  | boolean
-  | number
-  | null
+export type ComponentContentPrimitive = string | boolean | number | null
 
-export type ComponentContentValue =
-  | ComponentContentPrimitive
-  | ComponentContentRepeaterValue
+export type ComponentContentValue = ComponentContentPrimitive | ComponentContentRepeaterValue
 
-export type ComponentContentRepeaterValue =
-  Array<Record<string, ComponentContentValue>>
+export type ComponentContentRepeaterValue = Array<Record<string, ComponentContentValue>>
 
 export type ComponentContentProps = Record<string, ComponentContentValue>
 
@@ -22,27 +15,24 @@ export interface ComponentContentBase {
   schemaId: string
 }
 
-export interface NormalizedComponentContent
-  extends ComponentContentBase {
+export interface NormalizedComponentContent extends ComponentContentBase {
   id?: string
 }
 
-export interface ComponentContentApiPayloadItem
-  extends ComponentContentBase {
+export interface ComponentContentApiPayloadItem extends ComponentContentBase {
   _id: string
   createdAt?: string
   updatedAt?: string
 }
 
-export type ComponentContentApiPayload =
-  ComponentContentApiPayloadItem[]
+export type ComponentContentApiPayload = ComponentContentApiPayloadItem[]
 
-export interface ComponentContentFormPayload
-  extends ComponentContentBase {
+export interface ComponentContentFormPayload extends ComponentContentBase {
   id?: string
 }
 
 export interface ComponentContentFormState {
   schema: ComponentSchemaField[]
   id?: string
+  schemaId?: string
 }

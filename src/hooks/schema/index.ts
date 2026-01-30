@@ -1,5 +1,3 @@
-export { useComponentSchemaPropsRepeater } from './useComponentSchemaPropsRepeater'
-export { useComponentSchemaForm } from './useComponentSchemaForm'
-export { useSyncComponentSchema } from './useSyncComponentSchema'
-
-export type { FieldType } from './useComponentSchemaPropsRepeater'
+export { default as useComponentSchemaPropsRepeater } from './useComponentSchemaPropsRepeater'
+export { default as useComponentSchemaForm } from './useComponentSchemaForm'
+export { default as useSyncComponentSchema } from './useSyncComponentSchema'

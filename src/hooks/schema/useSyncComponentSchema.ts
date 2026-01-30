@@ -1,53 +1,57 @@
 import { useCallback } from 'react'
 import { bulkUpdateComponentContent, fetchAllComponentContent } from '~api/componentContent'
 import { getRenamedFields } from '~helpers'
-import type { ComponentSchemaField, ComponentContentApiPayload } from '~api/contentSchema'
+import type { ComponentContentApiPayloadItem } from '~api/componentContent'
+import type { ComponentSchemaField } from '~api/componentSchema'
 
-export const useSyncComponentSchema = () => {
-  const syncSchema = useCallback(async ({
-    schemaId,
-    prevSchema,
-    nextSchema
-  }: { 
-    schemaId: string 
-    prevSchema: ComponentSchemaField[] 
-    nextSchema: ComponentSchemaField[] 
-  }) => {
-    if (!schemaId || !prevSchema || !nextSchema) return
+const useSyncComponentSchema = () => {
+  const syncSchema = useCallback(
+    async ({
+      schemaId,
+      prevSchema,
+      nextSchema,
+    }: {
+      schemaId: string
+      prevSchema: ComponentSchemaField[]
+      nextSchema: ComponentSchemaField[]
+    }) => {
+      if (!schemaId || !prevSchema || !nextSchema) return
 
-    let instances: ComponentContentApiPayload[] = []
+      let instances: ComponentContentApiPayloadItem[] = []
 
-    try {
-      // Fetch all component-content that have this schemaId
-      instances = await fetchAllComponentContent({ schemaId: schemaId })
-      // @TODO: fetchAllEntities to accept optional filters: { schemaId: 'Card' }
-    } catch (err) {
-      console.error(`Failed to fetch component content with schema id of ${schemaId}: ${err}`)
-      return
-    }
+      try {
+        instances = await fetchAllComponentContent({ schemaId })
+      } catch (err) {
+        console.error(`Failed to fetch component content with schema id ${schemaId}:`, err)
+        return
+      }
 
-    const renames = getRenamedFields(prevSchema, nextSchema)
-    if (!renames.length) return
+      const renames = getRenamedFields(prevSchema, nextSchema)
+      if (!renames.length) return
 
-    const updates = instances.map(instance => {
-      const updatedProps = { ...instance.props }
-      renames.forEach(({ from, to }) => {
-        if (from in updatedProps) {
-          updatedProps[to] = updatedProps[from]
-          delete updatedProps[from]
-        }
+      const updates = instances.map(instance => {
+        const updatedProps = { ...instance.props }
+        renames.forEach(({ from, to }) => {
+          if (from in updatedProps) {
+            updatedProps[to] = updatedProps[from]
+            delete updatedProps[from]
+          }
+        })
+        return { id: instance._id, props: updatedProps }
       })
-      return { id: instance._id, props: updatedProps }
-    })
 
-    if (!updates.length) return
+      if (!updates.length) return
 
-    try {
-      await bulkUpdateComponentContent(updates)
-    } catch (err) {
-      console.error('Bulk update failed', err)
-    }
-  }, [])
+      try {
+        await bulkUpdateComponentContent(updates)
+      } catch (err) {
+        console.error('Bulk update failed', err)
+      }
+    },
+    []
+  )
 
   return { syncSchema }
 }
+
+export default useSyncComponentSchema

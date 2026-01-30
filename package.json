@@ -18,7 +18,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "prepare": "husky",
-    "precommit": "tsc --noEmit && eslint 'src/**/*.{ts,tsx}' && prettier --check 'src/**/*.{ts,tsx,js,jsx,json,css,scss,md}'"
+    "pre-commit": "tsc --noEmit && eslint 'src/**/*.{ts,tsx}' && prettier --check 'src/**/*.{ts,tsx,js,jsx,json,css,scss,md}'",
+    "prettier:check": "prettier --check 'src/**/*.{ts,tsx,js,jsx,json,css,scss,md}'",
+    "prettier:fix": "prettier --write 'src/**/*.{ts,tsx,js,jsx,json,css,scss,md}'"
   },
   "eslintConfig": {
     "extends": [
@@ -52,6 +54,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "postcss": "^8.5.6",
+    "prettier": "^3.8.1",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.53.1",
     "vite": "^7.3.1"
