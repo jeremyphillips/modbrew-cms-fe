@@ -8,10 +8,7 @@ const ComponentContentCreate = () => {
     <>
       <h1>Create new component content</h1>
 
-      <ComponentContentForm
-        action="CREATE"
-        resourceId={schemaId}
-      />
+      <ComponentContentForm action="CREATE" resourceId={schemaId ?? null} />
     </>
   )
 }

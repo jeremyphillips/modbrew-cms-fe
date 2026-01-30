@@ -7,10 +7,7 @@ export interface ApiError {
   status: number
 }
 
-export async function apiFetch<T = ApiPayload>(
-  url: string,
-  options: RequestInit = {}
-): Promise<T> {
+export async function apiFetch<T = ApiPayload>(url: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${apiBase}${url}`, {
     headers: { 'Content-Type': 'application/json' },
     ...options,

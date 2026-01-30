@@ -1,6 +1,3 @@
-export { useComponentSchemaPropsRepeater } from './useComponentSchemaPropsRepeater'
-export { useComponentSchemaForm } from './useComponentSchemaForm'
-export { useDirtySnapshot } from './useDirtySnapshot'
-
-export type { FieldType, SchemaField } from './useComponentSchemaPropsRepeater'
-
+export { default as useComponentSchemaPropsRepeater } from './schema/useComponentSchemaPropsRepeater'
+export { default as useComponentSchemaForm } from './schema/useComponentSchemaForm'
+export { default as useDirtySnapshot } from './shared/useDirtySnapshot'

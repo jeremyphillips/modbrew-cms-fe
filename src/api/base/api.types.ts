@@ -1,4 +1,4 @@
-import type { ComponentSchemaApiPayloadItem } from '~api/contentSchema'
+import type { ComponentSchemaApiPayloadItem } from '~api/componentSchema'
 import type { ComponentContentApiPayloadItem } from '~api/componentContent'
 import type { PageContent } from '~api/pageContent'
 

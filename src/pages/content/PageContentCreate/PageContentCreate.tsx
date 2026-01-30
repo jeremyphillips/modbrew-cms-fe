@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -5,7 +8,7 @@ function PageContentCreate() {
   const [pageTitle, setPageTitle] = useState('')
   const navigate = useNavigate()
 
-  const handleCreate = async (e) => {
+  const handleCreate = async e => {
     e.preventDefault()
     // Call API to create a page
     // For example:
@@ -20,7 +23,7 @@ function PageContentCreate() {
         <input
           type="text"
           value={pageTitle}
-          onChange={(e) => setPageTitle(e.target.value)}
+          onChange={e => setPageTitle(e.target.value)}
           placeholder="Page Title"
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
         />

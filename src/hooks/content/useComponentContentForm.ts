@@ -2,12 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { fetchAllComponentSchemas } from '~api/componentSchema'
 import { fetchComponentContentById } from '~api/componentContent'
-import type {
-  ComponentContentApiPayloadItem,
-  ComponentContentFormState,
-  ComponentContentProps
-} from '~api/componentContent'
-// import type { ComponentSchemaApiPayloadItem } from '~api/componentSchema'
+import type { ComponentContentApiPayloadItem, ComponentContentProps } from '~api/componentContent'
+import type { ComponentSchemaApiPayloadItem } from '~api/componentSchema'
 
 interface UseComponentContentFormOptions {
   initialValues?: Partial<ComponentContentApiPayloadItem>
@@ -16,69 +12,54 @@ interface UseComponentContentFormOptions {
 
 const useComponentContentForm = ({
   initialValues = {},
-  defaultSchemaId = null
+  defaultSchemaId = null,
 }: UseComponentContentFormOptions = {}) => {
   const { _id } = useParams<{ _id: string }>()
   const isCreating = window.location.pathname.includes('/create')
 
-  // Form state
-  const [componentSchemas, setComponentSchemas] = useState<ComponentContentFormState | null>({ schema: [] })
-  const [props, setProps] = useState<ComponentContentProps>(initialValues.props || {})
+  const [schema, setSchema] = useState<ComponentSchemaApiPayloadItem | null>(null)
+
   const [title, setTitle] = useState(initialValues.title || '')
+  const [props, setProps] = useState<ComponentContentProps>(initialValues.props || {})
 
   const initialValuesRef = useRef(initialValues)
 
   useEffect(() => {
-    const loadSchema = async () => {
-      try {
-        let schemaId: string | null = defaultSchemaId
+    const load = async () => {
+      let schemaId = defaultSchemaId
 
-        // If editing existing component-content, fetch it
-        if (!isCreating && _id) {
-          const componentContent = await fetchComponentContentById(_id)
-          if (componentContent) {
-            schemaId = componentContent.schemaId
-            setProps(componentContent.props || {})
-            setTitle(componentContent.title || '')
-          }
+      if (!isCreating && _id) {
+        const content = await fetchComponentContentById(_id)
+        if (content) {
+          schemaId = content.schemaId
+          setTitle(content.title || '')
+          setProps(content.props || {})
         }
-
-        if (!schemaId) {
-          console.warn("No schema ID provided for ComponentContentForm")
-          setComponentSchemas({ schema: [] })
-          return
-        }
-
-        // Fetch all schemas and find the one matching schemaId
-        const schemas = await fetchAllComponentSchemas()
-        const schema = schemas.find((s: ComponentContentApiPayloadItem) => s._id === schemaId)
-
-        if (!schema) {
-          console.warn(`No schema found for schemaId: ${schemaId}`)
-          setComponentSchemas({ schema: [] })
-          return
-        }
-
-        setComponentSchemas(schema)
-      } catch (error) {
-        console.error("Error loading component schema:", error)
-        setComponentSchemas({ schema: [] })
       }
+
+      if (!schemaId) {
+        setSchema(null)
+        return
+      }
+
+      const schemas = await fetchAllComponentSchemas()
+      const found = schemas.find((s: ComponentSchemaApiPayloadItem) => s._id === schemaId)
+
+      setSchema(found ?? null)
     }
 
-    loadSchema()
+    load()
   }, [_id, defaultSchemaId, isCreating])
 
-  // Update state if initialValues change
   useEffect(() => {
     if (JSON.stringify(initialValuesRef.current) !== JSON.stringify(initialValues)) {
       initialValuesRef.current = initialValues
-      setProps(initialValues.props || {})
       setTitle(initialValues.title || '')
+      setProps(initialValues.props || {})
     }
   }, [initialValues])
 
-  return { componentSchemas, setComponentSchemas, title, setTitle, props, setProps }
+  return { schema, title, setTitle, props, setProps }
 }
 
 export { useComponentContentForm }

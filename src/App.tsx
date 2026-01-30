@@ -5,7 +5,6 @@ import * as SchemaPages from '~pages/schema'
 import * as ContentPages from '~pages/content'
 
 const App = () => {
-
   return (
     <Router>
       <div className="App h-full bg-gray-100">
@@ -22,7 +21,7 @@ const App = () => {
               {/* Page Content Routes */}
               <Route path="/page-content" element={<ContentPages.PageContentList />} />
               <Route path="/page-content/:_id" element={<ContentPages.PageContentEdit />} />
-              <Route path="/page-content/create" element={<ContentPages.PageContentCreate />} />  
+              <Route path="/page-content/create" element={<ContentPages.PageContentCreate />} />
 
               {/* Component Content Routes */}
               <Route path="/component-content/:_id/list" element={<ContentPages.ComponentContentList />} />
@@ -32,7 +31,7 @@ const App = () => {
             </Routes>
           </div>
         </div>
-      </div>  
+      </div>
     </Router>
   )
 }

@@ -14,15 +14,7 @@ interface ModalProps {
   children?: ReactNode
 }
 
-const Modal = ({
-  isOpen,
-  onClose,
-  width = 'md',
-  headline,
-  description,
-  buttons = [],
-  children
-}: ModalProps) => {
+const Modal = ({ isOpen, onClose, width = 'md', headline, description, buttons = [], children }: ModalProps) => {
   useEffect(() => {
     if (!isOpen) return
 
@@ -41,56 +33,35 @@ const Modal = ({
 
   if (!isOpen) return null
 
-  const coreClassNames =
-    'fixed inset-0 z-50 flex items-center justify-center'
+  const coreClassNames = 'fixed inset-0 z-50 flex items-center justify-center'
 
-  const overlayClassNames =
-    'absolute inset-0 bg-black/50 backdrop-blur-sm'
+  const overlayClassNames = 'absolute inset-0 bg-black/50 backdrop-blur-sm'
 
-  const modalBaseClassNames =
-    'relative bg-white rounded-lg shadow-xl w-full max-h-[90vh] overflow-y-auto'
+  const modalBaseClassNames = 'relative bg-white rounded-lg shadow-xl w-full max-h-[90vh] overflow-y-auto'
 
   const widthClassNamesMap: Record<ModalWidthType, string> = {
     sm: 'max-w-sm',
     md: 'max-w-lg',
-    lg: 'max-w-2xl'
+    lg: 'max-w-2xl',
   }
 
   return (
     <div className={coreClassNames}>
-      <div
-        className={overlayClassNames}
-        onClick={onClose}
-      />
+      <div className={overlayClassNames} onClick={onClose} />
 
-      <div
-        className={`${modalBaseClassNames} ${widthClassNamesMap[width]} p-6`}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className={`${modalBaseClassNames} ${widthClassNamesMap[width]} p-6`} onClick={e => e.stopPropagation()}>
         {(headline || description) && (
           <header className="mb-4">
-            {headline && (
-              <h3 className="text-lg font-semibold text-gray-900">
-                {headline}
-              </h3>
-            )}
-            {description && (
-              <p className="mt-1 text-sm text-gray-600">
-                {description}
-              </p>
-            )}
+            {headline && <h3 className="text-lg font-semibold text-gray-900">{headline}</h3>}
+            {description && <p className="mt-1 text-sm text-gray-600">{description}</p>}
           </header>
         )}
 
-        {children && (
-          <div className="mb-6">
-            {children}
-          </div>
-        )}
+        {children && <div className="mb-6">{children}</div>}
 
         {buttons.length > 0 && (
           <footer className="flex justify-end gap-2">
-            {buttons.map((button) => (
+            {buttons.map(button => (
               <Button key={button.id} {...button} />
             ))}
           </footer>

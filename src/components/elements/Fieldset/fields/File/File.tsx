@@ -8,7 +8,7 @@ interface FileProps {
     width?: number
     max_width?: number
     min_width?: number
-  },
+  }
   id: string
   isRequired: boolean
   label: string
@@ -25,7 +25,10 @@ const File = ({
   return (
     mimeTypes && (
       <>
-        <label htmlFor={id}>{label}{isRequired ? '*' : ''}</label>
+        <label htmlFor={id}>
+          {label}
+          {isRequired ? '*' : ''}
+        </label>
         <input type="file" id={id} name={id} />
       </>
     )

@@ -1,17 +1,17 @@
 import type { EndpointType, FormActionType } from '~api/base'
 
-type UseNormalizedSubmitArgs<T> = {
+export interface UseNormalizedSubmitArgs<TPayload> {
   resource: EndpointType
   action: FormActionType
-  resourceId: string | null
-  buildPayload: () => T
-  handleAction: (endpoint: EndpointType, action: FormActionType, payload: T, resourceId?: string | null) => void
-  normalize: (payload: T) => T
+  resourceId?: string
+  buildPayload: () => TPayload
+  normalize: (payload: TPayload) => TPayload
   onBeforeSubmit?: () => Promise<void> | void
   onAfterSubmit?: () => void
+  handleAction: (endpoint: EndpointType, action: FormActionType, payload: TPayload, resourceId?: string) => void
 }
 
-export const useNormalizedSubmit = <T>({
+const useNormalizedSubmit = <T>({
   resource,
   action,
   resourceId,
@@ -19,7 +19,7 @@ export const useNormalizedSubmit = <T>({
   normalize,
   onBeforeSubmit,
   onAfterSubmit,
-  handleAction
+  handleAction,
 }: UseNormalizedSubmitArgs<T>) => {
   const submit = async (e?: React.FormEvent) => {
     e?.preventDefault()
@@ -36,3 +36,5 @@ export const useNormalizedSubmit = <T>({
 
   return { submit }
 }
+
+export default useNormalizedSubmit
